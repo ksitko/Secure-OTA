@@ -1,0 +1,10 @@
+# Build Directory
+build/
+sdkconfig
+sdkconfig.old
+
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
