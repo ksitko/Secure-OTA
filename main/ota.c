@@ -131,25 +131,6 @@ void ota_task(void *pvParameter)
     ota_tls_init();
 
     ESP_LOGI(TAG, "Reading HTTPS response...");
-    // if(ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE)
-    //     continue;
-    //
-    // if(ret == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
-    //     ret = 0;
-    //     break;
-    // }
-    //
-    // if(ret < 0)
-    // {
-    //     ESP_LOGE(TAG, "mbedtls_ssl_read returned -0x%x", -ret);
-    //     break;
-    // }
-    //
-    // if(ret == 0)
-    // {
-    //     ESP_LOGI(TAG, "connection closed");
-    //     break;
-    // }
 
     /*Check Header of remote Bin, compare to local*/
     int buff_len = ota_tls_read((unsigned char *)text, BUFFSIZE);
