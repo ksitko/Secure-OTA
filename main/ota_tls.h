@@ -17,18 +17,29 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-#ifndef WIFI_H
-#define WIFI_H
+#ifndef OTA_TLS_H
+#define OTA_TLS_H
 
-#define EXAMPLE_WIFI_SSID CONFIG_WIFI_SSID
-#define EXAMPLE_WIFI_PASS CONFIG_WIFI_PASSWORD
+/*
+ * Free all of the mbedtls context variables
+ */
+void ota_tls_exit();
 
-esp_err_t event_handler(void *ctx, system_event_t *event);
-EventGroupHandle_t get_wifi_status();
-void initialise_wifi(void);
+/*
+ * mbedtls connection creat. NEEDS TO BE CLEANED UP.
+ */
+void ota_tls_init();
+
+/*
+ * Read from TLS connection.
+ */
+int ota_tls_read(unsigned char *output, int buffer);
 
 #endif
+
 /*
 How To use:
-initialise_wifi();
+ota_tls_init();
+int buff_len = ota_tls_read((unsigned char *)text, BUFFSIZE);
+ota_tls_exit();
 */

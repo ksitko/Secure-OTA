@@ -1,11 +1,22 @@
-/* OTA example
-
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
+// Copyright (c) 2017 Krzysztof Sitko
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 #include <string.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -13,20 +24,22 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
-
 #include "esp_system.h"
 #include "esp_event_loop.h"
 #include "esp_log.h"
+#include "nvs_flash.h"
 
 #include "wifi.h"
-
 #include "ota.h"
 
-void hello_task(void *pvParameter)
+/*
+ * Watch for memory leaks or overflows
+ */
+void canary_task(void *pvParameter)
 {
     while(1){
-    printf("Hello world! This is Secure ESP OTA 0.91\n");
-    vTaskDelay(4000 / portTICK_PERIOD_MS);
+    printf("Secure OTA || Free Heap: %d\n",xPortGetFreeHeapSize());
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
 }
 
@@ -35,5 +48,5 @@ void app_main()
     nvs_flash_init();
     initialise_wifi();
     xTaskCreate(&ota_task, "ota_task", 16384, NULL, 5, NULL);
-    xTaskCreate(&hello_task, "hello_task", 2048, NULL, 2, NULL);
+    xTaskCreate(&canary_task, "hello_task", 2048, NULL, 2, NULL);
 }

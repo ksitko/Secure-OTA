@@ -1,7 +1,11 @@
-/* resolve read the responding header from the GET request and find the size of the binary
- * return true if found
- * otherwise return false
- * */
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "esp_partition.h"
+#include "esp_log.h"
+#include "mbedtls/md5.h"
+#include "rom/spi_flash.h"
+
 #include "ota_validate.h"
 
 static const char *VAL_TAG = "ota_validate";
@@ -31,7 +35,7 @@ bool remote_get_size(ota_header_context *context, char *header)
         return false;
     } else {
         ESP_LOGI(VAL_TAG, "Found binary length key");
-    } 
+    }
 
     /*Find start of ETag Value*/
     int bin_length = 0;
@@ -43,7 +47,7 @@ bool remote_get_size(ota_header_context *context, char *header)
         context->length = bin_length;
         ESP_LOGI(VAL_TAG, "Binary is %d bytes", bin_length);
         return true;
-    }     
+    }
 }
 
 bool remote_get_hash(ota_header_context *context, char *header)
@@ -57,7 +61,7 @@ bool remote_get_hash(ota_header_context *context, char *header)
         return false;
     } else {
         ESP_LOGI(VAL_TAG, "Found ETag key");
-    } 
+    }
 
     /*Find start of ETag Value*/
     ETag_start = strstr(ETag_start,"\"")+1;//Find first char after "
@@ -66,7 +70,7 @@ bool remote_get_hash(ota_header_context *context, char *header)
         return false;
     } else {
         ESP_LOGI(VAL_TAG, "Found start of ETag value");
-    }   
+    }
 
     /*Find end of ETag Value*/
     ETag_end = strstr(ETag_start,"\"");
@@ -75,23 +79,23 @@ bool remote_get_hash(ota_header_context *context, char *header)
         return false;
     } else {
         ESP_LOGI(VAL_TAG, "Found end of ETag value");
-    }   
+    }
 
     /*Find ETag Length*/
-    int ETag_length=(int)ETag_end-(int)ETag_start;
+    int ETag_length = (int)ETag_end-(int)ETag_start;
     //Only Accepting ETag's which have the same length as MD5
     if (ETag_length != 32) {
         ESP_LOGE(VAL_TAG, "Invalid ETag value length!");
         return false;
     } else {
         ESP_LOGI(VAL_TAG, "ETag value length is %d", ETag_length);
-    }   
-    snprintf(context->remote,32,ETag_start);
+    }
+    snprintf(context->remote_hash,32,ETag_start);
     return true;
 }
 
 bool validate_remote_headers(ota_header_context *context, char *header){
-    if (context== NULL){
+    if (context == NULL){
         return false;
     }
     bool ret = remote_get_hash(context, header);
@@ -117,8 +121,8 @@ bool local_get_hash(ota_header_context *context, const esp_partition_t* partitio
     mbedtls_md5_free( &ctx );
 
     if(ret!=ESP_OK){
-        ESP_LOGI(VAL_TAG, "SPI Flash Read Fail!");  
-        return false; 
+        ESP_LOGI(VAL_TAG, "SPI Flash Read Fail!");
+        return false;
     }
     char local_ETag_array[32]={0};
     char local_buff[2];
@@ -126,23 +130,29 @@ bool local_get_hash(ota_header_context *context, const esp_partition_t* partitio
         sprintf(local_buff,"%02x",local_byte_array[i]);
         strcat(local_ETag_array,local_buff);
     }
-    snprintf(context->local,32,local_ETag_array);
+    snprintf(context->local_hash,32,local_ETag_array);
     return true;
 }
 
 bool validate_hashes(ota_header_context *context, const esp_partition_t* partition){
+    if (context == NULL){
+        return false;
+    }
     if(local_get_hash(context, partition) == false ){
         return false;
     }
-    if(strncmp (context->local,context->remote,32)==0){
+    if(strncmp (context->local_hash,context->remote_hash,32)==0){
         ESP_LOGI(VAL_TAG, "MD5 Checksum match!");
         return true;
     }else{
-       ESP_LOGE(VAL_TAG, "Checksum Mismatch!"); 
+       ESP_LOGE(VAL_TAG, "Checksum Mismatch!");
         return false;
     }
 }
 
 int bin_length(ota_header_context *context){
+  if (context == NULL){
+    return -1;
+  }
     return context->length;
 }

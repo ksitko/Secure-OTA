@@ -1,3 +1,15 @@
+#include "esp_wifi.h"
+#include <sys/socket.h>
+#include <netdb.h>
+
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/event_groups.h"
+
+#include "esp_system.h"
+#include "esp_event_loop.h"
+#include "esp_log.h"
+
 #include "wifi.h"
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t wifi_event_group;
