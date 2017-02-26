@@ -82,7 +82,7 @@ bool remote_get_hash(ota_header_context *context, char *header)
     }
 
     /*Find ETag Length*/
-    int ETag_length = (int)ETag_end-(int)ETag_start;
+    int ETag_length = (int)ETag_end - (int)ETag_start;
     //Only Accepting ETag's which have the same length as MD5
     if (ETag_length != 32) {
         ESP_LOGE(VAL_TAG, "Invalid ETag value length!");
@@ -90,7 +90,7 @@ bool remote_get_hash(ota_header_context *context, char *header)
     } else {
         ESP_LOGI(VAL_TAG, "ETag value length is %d", ETag_length);
     }
-    snprintf(context->remote_hash,32,ETag_start);
+    snprintf(context->remote_hash, 32, ETag_start);
     return true;
 }
 
@@ -104,29 +104,38 @@ bool validate_remote_headers(ota_header_context *context, char *header){
 }
 
 bool local_get_hash(ota_header_context *context, const esp_partition_t* partition){
+    int ret = ESP_OK;
     unsigned char *partition_address = (unsigned char *)partition->address;
-    unsigned char local_byte_array[16]={0};
+    unsigned char local_byte_array[16] = {0};
     ESP_LOGI(VAL_TAG, "Calc MD5 Sum");
     mbedtls_md5_context ctx;
     mbedtls_md5_init( &ctx );
     mbedtls_md5_starts( &ctx );
-    int ret=-1;
-    int buffer_len=1;
-    uint8_t buffer[buffer_len];
-    for(int i=0;i<context->length/buffer_len;i++){
-        ret=spi_flash_read((size_t)(partition_address+i*buffer_len), buffer, sizeof(buffer));
-        mbedtls_md5_update( &ctx, buffer, (size_t)buffer_len);
+    int buffer_size = 32;
+    uint8_t buffer[buffer_size];
+    int remaining = context->length % buffer_size;
+    int iterations = context->length / buffer_size;
+    size_t current_length = buffer_size;
+    for(int i = 0; i < iterations; i++){
+      if (i == iterations-1 && remaining != 0){
+        current_length = remaining;
+        ret = spi_flash_read((size_t)(partition_address + i * buffer_size), buffer, (size_t)remaining);
+      }else{
+        ret = spi_flash_read((size_t)(partition_address + i * buffer_size), buffer, (size_t)buffer_size);
+      }
+        mbedtls_md5_update( &ctx, buffer, current_length);
     }
+
     mbedtls_md5_finish( &ctx, local_byte_array );
     mbedtls_md5_free( &ctx );
 
-    if(ret!=ESP_OK){
+    if(ret != ESP_OK){
         ESP_LOGI(VAL_TAG, "SPI Flash Read Fail!");
         return false;
     }
     char local_ETag_array[32]={0};
     char local_buff[2];
-    for(int i=0; i<16;i++){
+    for(int i = 0; i<16; i++){
         sprintf(local_buff,"%02x",local_byte_array[i]);
         strcat(local_ETag_array,local_buff);
     }
@@ -141,7 +150,7 @@ bool validate_hashes(ota_header_context *context, const esp_partition_t* partiti
     if(local_get_hash(context, partition) == false ){
         return false;
     }
-    if(strncmp (context->local_hash,context->remote_hash,32)==0){
+    if(strncmp (context->local_hash, context->remote_hash, 32)==0){
         ESP_LOGI(VAL_TAG, "MD5 Checksum match!");
         return true;
     }else{

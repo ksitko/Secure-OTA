@@ -6,8 +6,6 @@
 Cleanup TLS
 
 # Known Issues:
-Task watchdog gets triggered during MD5 Check sum. Consider either optimizing or feeding watchdog.
-
 Leaking memory: 128 Bytes per cycle. Need to plug leak.
 
 Fails to verify peer certificate: "The certificate validity starts in the future"
