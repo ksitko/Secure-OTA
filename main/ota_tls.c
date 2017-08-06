@@ -35,15 +35,12 @@ mbedtls_x509_crt cacert;
 #define OTA_SERVER   CONFIG_SERVER
 #define OTA_FILENAME CONFIG_FILENAME
 
-#define WEB_SERVER "s3.amazonaws.com"
-#define WEB_PORT "443"
-#define WEB_URL "/alz-ota/ota.bin"
 static const char *TAG = "ota-tls";
 
 // static const char *TAG = "example";
 
-static const char *REQUEST = "GET " WEB_URL " HTTP/1.1\n"
-    "Host: "WEB_SERVER"\n"
+static const char *REQUEST = "GET " OTA_FILENAME " HTTP/1.1\n"
+    "Host: "OTA_SERVER"\n"
     "User-Agent: esp-idf/1.0 esp32\n"
     "\n";
 
